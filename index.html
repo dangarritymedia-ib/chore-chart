@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F1523">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chore Chart">
+<link rel="apple-touch-icon" href="icon-cc-180.png">
+<link rel="icon" href="icon-cc-192.png">
+<link rel="manifest" href="manifest.json">
+<title>Chore Chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0F1523; --surface:#182033; --surface2:#212B42; --line:#2E3A55;
+  --text:#EEF2F8; --muted:#8E9BB5; --faint:#5C6883;
+  --accent:#67AEDC; --accent-ink:#04203A; --accent-2:#8CC4E8;
+  --good:#34D399; --bad:#F87171; --wait:#FBBF24; --gold:#FACC15;
+  --display:"Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body:"Barlow", "Segoe UI", system-ui, sans-serif;
+  --r:16px; --kid:var(--accent); --ink:#10131C;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);margin:0}
+body{color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45;padding:0 16px calc(84px + env(safe-area-inset-bottom,0px));-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1080px;margin:0 auto}
+[hidden]{display:none!important}
+svg{flex:none}
+
+/* header */
+.top{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:calc(14px + env(safe-area-inset-top,0px)) 12px;border-bottom:1px solid var(--line)}
+.brand{white-space:nowrap;font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.brand svg{width:30px;height:30px}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.sync{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.sync.synced i{background:var(--good)} .sync.saving i,.sync.syncing i{background:var(--accent)} .sync.auth i,.sync.norepo i,.sync.nowrite i{background:var(--bad)}
+@media (max-width:420px){.sync span{display:none}.brand{font-size:20px}.brand svg{width:26px;height:26px}}
+.lockchip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;white-space:nowrap}
+.lockchip svg{width:16px;height:16px}
+.lockchip.open{border-color:var(--gold);color:var(--gold)}
+.banner{background:#3a2a0a;color:#FFD68A;border:1px solid #6b4c12;border-radius:10px;padding:8px 12px;margin-top:12px;font-size:14px}
+
+main{padding-block:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.label{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border-radius:12px;padding:12px 18px;font-weight:700;background:var(--surface2);border:1px solid var(--line)}
+.btn.primary{background:linear-gradient(180deg,var(--accent-2),var(--accent));color:var(--accent-ink);border-color:var(--accent);font-family:var(--display);font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+.btn.small{padding:6px 10px;font-size:13px;border-radius:9px}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad)}
+.btn.good{color:var(--good);border-color:color-mix(in srgb,var(--good) 50%,var(--line))}
+.btn.block{width:100%}
+.btn:disabled{opacity:.4;cursor:default}
+input[type=number],input[type=text],input[type=password],input[type=time],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+input[type=number]{width:96px}
+textarea{width:100%;min-height:120px;resize:vertical;line-height:1.5}
+
+/* day bar */
+.daybar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.daybar h2{font-family:var(--display);font-weight:800;font-size:26px;margin:0;text-transform:uppercase;letter-spacing:.02em;line-height:1}
+.daybar h2 small{display:block;font-family:var(--body);font-weight:600;font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;margin-top:4px}
+.nav{display:flex;align-items:center;gap:6px}
+.nav button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:20px;display:flex;align-items:center;justify-content:center}
+.nav .todaybtn{width:auto;padding:0 12px;font-size:14px;font-weight:700}
+
+/* kid cards */
+.kids{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:740px){.kids{grid-template-columns:1fr 1fr}}
+.kid{border-top:4px solid var(--kid);min-width:0;container-type:inline-size}
+.kids>*{min-width:0}
+.khead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.dot{width:40px;height:40px;border-radius:50%;background:var(--kid);border:3px solid color-mix(in srgb,var(--kid) 40%,var(--bg));flex:none;display:flex;align-items:center;justify-content:center;color:var(--ink);font-family:var(--display);font-weight:800;font-size:20px}
+.kname{font-family:var(--display);font-weight:800;font-size:clamp(22px,7cqi,30px);line-height:1;text-transform:uppercase;letter-spacing:.02em;color:var(--kid);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kchips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.chip{display:flex;align-items:center;gap:4px;font-family:var(--display);font-weight:700;font-size:18px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.chip svg{width:16px;height:16px}
+.chip.fire{color:#FF9F5A} .chip.star{color:var(--gold)}
+.chip.fire.zero{color:var(--faint)}
+.wk{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted);margin-bottom:4px}
+.wk b{font-family:var(--display);font-size:20px;color:var(--text)}
+.bar{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(115deg,var(--kid) 0 10px,color-mix(in srgb,var(--kid) 70%,white) 10px 20px);border-radius:999px;transition:width .6s}
+.bar.won i{background:repeating-linear-gradient(115deg,var(--gold) 0 10px,#FDE68A 10px 20px)}
+.sec{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sec .tag{letter-spacing:.02em}
+
+/* chore buttons */
+.chore{width:100%;min-width:0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:14px;padding:12px 14px;min-height:64px;transition:background .2s,border-color .2s}
+.chore .ci{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--kid)}
+.chore .ci svg{width:24px;height:24px}
+.chore .cn{font-weight:700;font-size:17px;line-height:1.2}
+.chore .cn small{display:block;font-weight:500;font-size:13px;color:var(--muted);margin-top:2px}
+.chore .cp{font-family:var(--display);font-weight:800;font-size:22px;color:var(--kid);white-space:nowrap}
+.chore.big{min-height:80px}
+.chore.big .cn{font-size:20px}
+.chore.st-pending{border-color:var(--wait);background:color-mix(in srgb,var(--wait) 10%,var(--bg))}
+.chore.st-pending .ci{background:var(--wait);color:var(--ink)}
+.chore.st-pending .cn small{color:var(--wait)}
+.chore.st-ok{border-color:var(--kid);background:color-mix(in srgb,var(--kid) 18%,var(--bg))}
+.chore.st-ok .ci{background:var(--kid);color:var(--ink)}
+.chore.st-missed,.chore.st-late{opacity:.55}
+.chore.st-missed .cn small{color:var(--bad)}
+.chore.st-future{opacity:.6}
+.steps{display:grid;grid-template-columns:1fr;gap:8px}
+@container (min-width:560px){.steps{grid-template-columns:1fr 1fr}}
+.steps .chore{min-height:54px;padding:8px 10px;gap:10px}
+.steps .chore .ci{width:32px;height:32px;border-radius:9px}
+.steps .chore .ci svg{width:18px;height:18px}
+.steps .chore .cn{font-size:15px}
+.steps .chore .cp{font-size:17px}
+.bonusline{font-size:13px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px}
+.bonusline.on{color:var(--gold);font-weight:700}
+.bonusline svg{width:16px;height:16px}
+.satnote{display:flex;gap:10px;align-items:center;background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--muted);margin-top:10px}
+.satnote svg{width:20px;height:20px;color:var(--kid)}
+
+.extras{display:flex;flex-direction:column;gap:6px}
+.xrow{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px}
+.xrow .grow{flex:1;min-width:0}
+.xrow .pts{font-family:var(--display);font-weight:700;font-size:17px;color:var(--kid)}
+.xrow.pending{border-color:color-mix(in srgb,var(--wait) 60%,var(--line))}
+.xrow.no{opacity:.5;text-decoration:line-through}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);white-space:nowrap;font-family:var(--body);font-weight:600}
+.tag.wait{color:var(--wait);border-color:var(--wait)} .tag.ok{color:var(--good);border-color:var(--good)} .tag.no{color:var(--bad);border-color:var(--bad)} .tag.gold{color:var(--gold);border-color:var(--gold)}
+.addx{width:100%;margin-top:8px;border:2px dashed color-mix(in srgb,var(--kid) 55%,var(--line));background:transparent;color:var(--kid);border-radius:14px;padding:12px;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.addx svg{width:20px;height:20px}
+
+/* team */
+.team{margin-top:14px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.team .ti{width:52px;height:52px;border-radius:14px;background:var(--surface2);color:var(--gold);display:flex;align-items:center;justify-content:center}
+.team .ti svg{width:30px;height:30px}
+.team h3{font-family:var(--display);font-weight:800;font-size:22px;margin:0;text-transform:uppercase;letter-spacing:.02em;line-height:1.1}
+.tbar{height:14px;background:var(--surface2);border-radius:999px;overflow:hidden;margin:8px 0 4px;display:flex}
+.tbar i{display:block;height:100%;transition:width .6s}
+
+/* week */
+.wkcard{border-top:4px solid var(--kid);margin-bottom:14px}
+.wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.wd{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:92px}
+.wd.today{border-color:var(--kid)}
+.wd .dw{font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.wd .dn{font-family:var(--display);font-weight:700;font-size:16px;line-height:1}
+.wd .mk{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.wd .mk svg{width:16px;height:16px}
+.mk.ok{background:var(--kid);color:var(--ink)} .mk.pending{background:var(--wait);color:var(--ink)} .mk.missed{color:var(--bad);border:1.5px solid var(--bad)} .mk.future,.mk.todo,.mk.late{border:1.5px dashed var(--faint)}
+.wd .sb{font-size:11px;font-weight:700;color:var(--muted)}
+.wd .sb.full{color:var(--gold)}
+.wd .p{font-family:var(--display);font-size:14px;font-weight:700;color:var(--kid)}
+.perfect{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.pf{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.pf b{font-family:var(--display);font-size:17px}
+.pf.ok{border-color:var(--good);color:var(--good)}
+@media (max-width:420px){.perfect{grid-template-columns:1fr}}
+.rot{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rot .rc{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rot .rc h4{margin:0 0 6px;font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rot .rl{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0}
+.rot .rl i{width:12px;height:12px;border-radius:50%;background:var(--kid);flex:none}
+
+/* shop */
+.pills{display:flex;gap:8px;margin-bottom:14px}
+.pills button{flex:1;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px;font-family:var(--display);font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+.pills button.on{border-color:var(--kid);color:var(--kid);background:color-mix(in srgb,var(--kid) 12%,var(--surface))}
+.bal{display:flex;align-items:baseline;gap:10px;font-family:var(--display)}
+.bal b{font-size:60px;font-weight:800;line-height:.9;color:var(--kid)}
+.bal span{font-size:20px;color:var(--muted);font-weight:700}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:14px}
+.rw{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.rw .rn{font-weight:700;font-size:16px;line-height:1.25}
+.rw .rcost{font-family:var(--display);font-weight:800;font-size:22px;color:var(--gold);display:flex;align-items:center;gap:4px}
+.rw .rcost svg{width:18px;height:18px}
+.rw .mini{height:6px;background:var(--surface2);border-radius:999px;overflow:hidden}
+.rw .mini i{display:block;height:100%;background:var(--kid)}
+.rw.can{border-color:color-mix(in srgb,var(--kid) 60%,var(--line))}
+
+/* parent */
+.pinwrap{max-width:320px;margin:20px auto;text-align:center}
+.pinwrap h2{font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;margin:0 0 4px}
+.pdots{display:flex;gap:14px;justify-content:center;margin:18px 0}
+.pdots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--muted)}
+.pdots i.on{background:var(--text);border-color:var(--text)}
+.pdots.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pad button{height:64px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-family:var(--display);font-weight:700;font-size:28px}
+.stack{display:grid;gap:14px}
+.ap{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--kid);border-radius:12px;padding:10px 12px}
+.ap .who{font-family:var(--display);font-weight:800;font-size:16px;color:var(--kid);text-transform:uppercase;letter-spacing:.03em}
+.ap .what{font-weight:600;line-height:1.25}
+.ap .when{font-size:12px;color:var(--muted)}
+.ap .acts{display:flex;gap:6px;align-items:center}
+.ap .acts input{width:70px;padding:8px}
+.ap .acts .btn{padding:8px 12px}
+.ap .apts{font-family:var(--display);font-weight:800;font-size:18px;white-space:nowrap}
+details.set{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0 16px}
+details.set summary{list-style:none;cursor:pointer;padding:14px 0;font-family:var(--display);font-weight:800;font-size:19px;text-transform:uppercase;letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center}
+details.set summary::-webkit-details-marker{display:none}
+details.set summary::after{content:'+';font-size:24px;color:var(--muted)}
+details.set[open] summary::after{content:'–'}
+details.set .body{padding-bottom:16px;display:grid;gap:12px}
+.fr{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.fr label{font-size:14px}
+.fr .hint{font-size:12px;color:var(--muted);display:block}
+.lrow{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center}
+.lrow input[type=number]{width:100%}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:36px;height:36px;border-radius:50%;border:3px solid transparent;background:var(--c)}
+.sw.on{border-color:var(--text);box-shadow:0 0 0 2px var(--bg) inset}
+.subh{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+/* sheet */
+.sheetbg{position:fixed;inset:0;z-index:25;background:rgba(8,12,20,.7);display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:740px){.sheetbg{align-items:center}}
+.sheet{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--kid);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:86vh;overflow:auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+@media (min-width:740px){.sheet{border-radius:20px}}
+.sheet h3{font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;margin:0;color:var(--kid)}
+.xlist{display:grid;gap:8px;margin-top:14px}
+.xbtn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px 14px;font-weight:700;font-size:16px}
+.xbtn b{font-family:var(--display);font-size:20px;color:var(--kid)}
+.xbtn:active{border-color:var(--kid)}
+
+/* tabbar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+.tabbar .in{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-width:560px}
+.tabbar button{position:relative;border:0;background:transparent;padding:6px 0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted)}
+.tabbar button svg{width:24px;height:24px}
+.tabbar button.on{color:var(--accent)}
+.badge{position:absolute;top:0;left:calc(50% + 6px);background:var(--wait);color:var(--ink);font-size:11px;font-weight:800;border-radius:999px;min-width:18px;height:18px;padding:0 5px;display:flex;align-items:center;justify-content:center}
+
+/* toast + win */
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);font-family:var(--display);font-weight:800;font-size:19px;line-height:1.2;padding:10px 20px;border-radius:20px;width:max-content;opacity:0;transition:.3s;pointer-events:none;z-index:40;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.win{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(8,12,20,.75);padding:16px}
+.win .box{background:var(--surface);border:2px solid var(--kid);border-radius:20px;padding:28px 24px;text-align:center;max-width:380px}
+.win h2{font-family:var(--display);font-weight:800;font-size:42px;font-style:italic;text-transform:uppercase;color:var(--kid);margin:0;line-height:1}
+.win .prize{background:var(--bg);border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:10px;margin:14px 0;font-weight:700}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:31;width:100%;height:100%}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.empty{color:var(--muted);font-size:14px;padding:10px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="8" fill="#67AEDC"/><path d="M16 5.5l3 6.1 6.7 1-4.9 4.7 1.2 6.6L16 20.8l-6 3.1 1.2-6.6-4.9-4.7 6.7-1z" fill="#0F1523"/></svg><span>Chore Chart</span></div>
+    <div class="hdr-r"><div class="sync" id="syncStat"><i></i><span></span></div><button class="lockchip" id="lockChip" data-act="lockchip"></button></div>
+  </header>
+  <div id="banner"></div>
+  <main id="main"></main>
+</div>
+<nav class="tabbar"><div class="in" id="tabs"></div></nav>
+<div id="sheetLayer"></div>
+<div class="toast" id="toast"></div>
+<div id="winLayer"></div>
+<canvas id="confetti" hidden></canvas>
+
+<script>
+(() => {
+/* ---------- icons ---------- */
+const sv = (d, fill) => `<svg viewBox="0 0 24 24" ${fill?'fill="currentColor"':'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'}>${d}</svg>`;
+const IC = {
+  sweep: sv('<path d="M17.5 2.5l-5 9"/><path d="M8.5 11h8l1.5 10.5H6z"/><path d="M10.5 15v6.5M14 15v6.5"/>'),
+  dish: sv('<ellipse cx="12" cy="7" rx="8.5" ry="3"/><path d="M3.5 7v3.5c0 1.7 3.8 3 8.5 3s8.5-1.3 8.5-3V7"/><path d="M3.5 14v3c0 1.7 3.8 3 8.5 3s8.5-1.3 8.5-3v-3"/>'),
+  stoop: sv('<rect x="6" y="2.5" width="12" height="16" rx="1.5"/><path d="M2.5 21.5h19M4 18.5h16"/><circle cx="15" cy="11" r="1.1" fill="currentColor" stroke="none"/>'),
+  bath: sv('<path d="M2.5 12h19v2.5a5 5 0 01-5 5h-9a5 5 0 01-5-5z"/><path d="M5.5 12V5.5a2.5 2.5 0 015 0"/><path d="M6.5 19.5l-1 2M17.5 19.5l1 2"/>'),
+  laundry: sv('<path d="M8.5 3L3 6l2.2 4.3 2.8-1.2V21h8V9.1l2.8 1.2L21 6l-5.5-3a3.6 3.6 0 01-7 0z"/>'),
+  star: sv('<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/>', true),
+  fire: sv('<path d="M12 22.5c4.2 0 7.2-2.8 7.2-7 0-3.7-2.5-6.2-4.1-8.4-.4 2-1.5 3.3-2.7 3.9.3-3.3-1-6.5-3.7-8.5C8.9 6.3 4.8 9.4 4.8 15.5c0 4.2 3 7 7.2 7z"/>', true),
+  check: sv('<path d="M4.5 12.5l5 5L19.5 7"/>'),
+  clock: sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  x: sv('<path d="M6 6l12 12M18 6L6 18"/>'),
+  plus: sv('<path d="M12 5v14M5 12h14"/>'),
+  gift: sv('<rect x="3" y="8" width="18" height="4.5" rx="1"/><path d="M4.5 12.5v8.5h15v-8.5M12 8v13M12 8C10.5 4.5 6.5 4 6.5 6.5S10 8 12 8zM12 8c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/>'),
+  home: sv('<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5v10.5h13V9.5"/><path d="M10 20v-5.5h4V20"/>'),
+  cal: sv('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  shield: sv('<path d="M12 2.5l8 3v6c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>'),
+  lock: sv('<rect x="4.5" y="10.5" width="15" height="11" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/>'),
+  unlock: sv('<rect x="4.5" y="10.5" width="15" height="11" rx="2"/><path d="M8 10.5V7a4 4 0 017.7-1.5"/>'),
+  trophy: sv('<path d="M7 3.5h10v5a5 5 0 01-10 0z"/><path d="M7 5.5H3.5v1.5A3.5 3.5 0 007 10.5M17 5.5h3.5v1.5a3.5 3.5 0 01-3.5 3.5"/><path d="M12 13.5V17M8 21h8M9.5 17h5v4h-5z"/>'),
+  team: sv('<circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.5-6 5.5-6s5.5 2.7 5.5 6M11.5 15.2c1.3-.8 3-1.2 5-1.2 3 0 5 2.7 5 6"/>'),
+  sparkle: sv('<path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>', true)
+};
+
+/* ---------- defaults ---------- */
+const KIDS = ['georgia','isabella'];
+const PALETTE = ['#FF7AB6','#C58CFF','#8B9CFF','#67AEDC','#5EEAD4','#34D399','#FACC15','#FF9F5A','#F87171'];
+const rid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const DEFAULTS = {
+  kids:{ georgia:{name:'Georgia', color:'#C58CFF'}, isabella:{name:'Isabella', color:'#5EEAD4'} },
+  anchor:'2026-10-04',            // a Sunday when Georgia is on the dishwasher job
+  jobs:{
+    dish:{name:'Empty the dishwasher', pts:10, bundle:'bath'},
+    sweep:{name:'Sweep the kitchen', pts:10, bundle:'stoop'}
+  },
+  bundles:{
+    bath:{name:'Bathroom', step:10, steps:['Clean the sink','Clean the mirror','Clean the bathtub','Sweep the floor','Mop the floor','Put everything back','Empty the trash']},
+    stoop:{name:'Front stoop', step:15, steps:['Sweep','Mop','Baseboards','Put everything back']}
+  },
+  laundry:{name:'Laundry', step:5, steps:['Wash','Dry','Fold','Put away']},
+  bundleBonus:30, laundryBonus:10,
+  cutoff:'21:00',
+  weeklyTarget:180, weeklyPrize:'Pick the weekend movie or dessert',
+  perfectBonus:50, streakEvery:7, streakBonus:50,
+  extras:[
+    {id:'x1', name:'Unload the groceries', pts:20},
+    {id:'x2', name:'Take out garbage & recycling', pts:15},
+    {id:'x3', name:'Wipe the kitchen counters', pts:15},
+    {id:'x4', name:'Tidy the entryway & shoes', pts:15},
+    {id:'x5', name:'Help make dinner', pts:25},
+    {id:'x6', name:'Vacuum the living room', pts:30},
+    {id:'x7', name:'Fold the family laundry', pts:30},
+    {id:'x8', name:'Rake leaves / shovel snow', pts:50},
+    {id:'x9', name:'Clean out the car', pts:50}
+  ],
+  rewards:[
+    {id:'r1', name:'Stay up 30 min late', cost:75},
+    {id:'r2', name:'Pick Friday dinner', cost:100},
+    {id:'r3', name:'Movie night pick + snacks', cost:120},
+    {id:'r4', name:'Dollar store trip', cost:150},
+    {id:'r5', name:'Starbucks drink', cost:250},
+    {id:'r6', name:'One-on-one date with Dad', cost:400},
+    {id:'r7', name:'Sleepover with a friend', cost:500}
+  ],
+  team:{name:'Family pizza & movie night', target:1000, since:null},
+  pin:null
+};
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DOWL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2,'0');
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseKey = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
+const todayKey = () => keyOf(new Date());
+const addDays = (k,n) => { const d=parseKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
+const weekStart = k => { const d=parseKey(k); d.setDate(d.getDate()-d.getDay()); return keyOf(d); };
+const weekKeys = k => { const s=weekStart(k); return [0,1,2,3,4,5,6].map(i=>addDays(s,i)); };
+const isSat = k => parseKey(k).getDay()===6;
+const daysBetween = (a,b) => Math.round((parseKey(b)-parseKey(a))/864e5);
+const fmtDay = k => { const d=parseKey(k); return `${DOW[d.getDay()]} ${MON[d.getMonth()]} ${d.getDate()}`; };
+const fmtTime = ms => new Date(ms).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+const fmt12 = hhmm => { const [h,m]=hhmm.split(':').map(Number); return `${(h%12)||12}:${pad(m)} ${h<12?'am':'pm'}`; };
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'step';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- state ---------- */
+const S = { settings:structuredClone(DEFAULTS), view:'today', dayK:todayKey(), weekK:todayKey(), shopKid:'georgia', sheet:null, parentUntil:0, pin:{buf:'',stage:null,first:''}, idx:{}, stats:{} };
+const st = () => S.settings;
+const kidName = kid => st().kids[kid]?.name || kid;
+const kidColor = kid => st().kids[kid]?.color || '#67AEDC';
+const kv = kid => `--kid:${kidColor(kid)}`;
+const isParent = () => Date.now() < S.parentUntil;
+const bumpParent = () => { if(isParent()) S.parentUntil = Date.now() + 10*60*1000; };
+const afterCutoff = () => { const [h,m]=(st().cutoff||'21:00').split(':').map(Number); const n=new Date(); return n.getHours()*60+n.getMinutes() >= h*60+m; };
+
+/* ---------- rotation + chores ---------- */
+function jobOf(kid, k){
+  const w = Math.floor(daysBetween(weekStart(st().anchor), weekStart(k)) / 7);
+  const gJob = ((w % 2) + 2) % 2 === 0 ? 'dish' : 'sweep';
+  return kid === 'georgia' ? gJob : (gJob === 'dish' ? 'sweep' : 'dish');
+}
+function choresFor(kid, k){
+  const jk = jobOf(kid, k), job = st().jobs[jk];
+  const items = [{id:'daily', name:job.name, pts:job.pts, group:'daily', icon:jk}];
+  if(isSat(k)){
+    const b = st().bundles[job.bundle];
+    b.steps.forEach(s => items.push({id:'b:'+slug(s), name:s, pts:b.step, group:'bundle', icon:job.bundle}));
+    st().laundry.steps.forEach(s => items.push({id:'l:'+slug(s), name:s, pts:st().laundry.step, group:'laundry', icon:'laundry'}));
+  }
+  return items;
+}
+
+/* ---------- persistence: GitHub repo (data.json) ---------- */
+const LS = {
+  get(k, fb){ try{ const v=localStorage.getItem('chores.'+k); return v==null?fb:JSON.parse(v); }catch(e){ return fb; } },
+  set(k, v){ try{ localStorage.setItem('chores.'+k, JSON.stringify(v)); }catch(e){} }
+};
+const GH = { cfg: LS.get('gh', null), sha:null, busy:false, status:'idle' };
+let PENDING = LS.get('pending', []);
+const DATA_PATH = 'data.json';
+const emptyData = () => ({version:1, logs:{}, settings:null});
+let DATA = LS.get('cache', null) || emptyData();
+
+function applyOp(d, op){
+  d.logs ||= {};
+  switch(op.t){
+    case 'put': d.logs[op.id] = op.rec; break;
+    case 'patch': if(d.logs[op.id]) d.logs[op.id] = {...d.logs[op.id], ...op.patch}; break;
+    case 'del': delete d.logs[op.id]; break;
+    case 'set': d.settings = {...(d.settings||{}), [op.key]: op.value}; break;
+  }
+  return d;
+}
+function mergeSettings(saved){
+  const s = structuredClone(DEFAULTS);
+  if(!saved) return s;
+  for(const [k,v] of Object.entries(saved)){
+    if(v == null) continue;
+    if(k === 'kids') for(const kid of KIDS) s.kids[kid] = {...s.kids[kid], ...(v[kid]||{})};
+    else s[k] = structuredClone(v);
+  }
+  return s;
+}
+function loadFromData(){
+  S.settings = mergeSettings(DATA.settings);
+  const idx = {}; let first = null;
+  for(const [id, l] of Object.entries(DATA.logs || {})){
+    const rec = {...l, id};
+    const day = ((idx[l.kid] ||= {})[l.k] ||= {chores:{}, extras:[], rewards:[]});
+    if(l.kind === 'chore') day.chores[l.item] = rec;
+    else if(l.kind === 'reward') day.rewards.push(rec);
+    else day.extras.push(rec);
+    if(l.kind !== 'reward' && (!first || l.k < first)) first = l.k;
+  }
+  for(const kid in idx) for(const k in idx[kid]) idx[kid][k].extras.sort((a,b)=>a.at-b.at);
+  S.idx = idx; S.firstKey = first || todayKey();
+  recompute();
+}
+function commit(op){
+  applyOp(DATA, op); LS.set('cache', DATA);
+  PENDING.push(op); LS.set('pending', PENDING);
+  loadFromData(); flush();
+}
+const putLog = (id, rec) => commit({t:'put', id, rec});
+const patchLog = (id, patch) => commit({t:'patch', id, patch});
+const delLog = id => commit({t:'del', id});
+const setSetting = (key, value) => commit({t:'set', key, value:structuredClone(value)});
+
+const b64enc = str => { const bytes = new TextEncoder().encode(str); let bin=''; for(let i=0;i<bytes.length;i+=0x8000) bin += String.fromCharCode(...bytes.subarray(i,i+0x8000)); return btoa(bin); };
+const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g,'')), c=>c.charCodeAt(0)));
+const ghUrl = c => `https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/${DATA_PATH}`;
+const ghFetch = (c, opts={}) => fetch(ghUrl(c) + (opts.method ? '' : `?ts=${Date.now()}`), {...opts, cache:'no-store', headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${c.token}`,'X-GitHub-Api-Version':'2022-11-28', ...(opts.body?{'Content-Type':'application/json'}:{})}});
+async function ghRead(c){
+  const r = await ghFetch(c);
+  if(r.status===404) return {data:emptyData(), sha:null, missing:true};
+  if(!r.ok) throw {status:r.status};
+  const j = await r.json();
+  return {data: JSON.parse(b64dec(j.content) || '{}'), sha:j.sha};
+}
+async function ghWrite(c, data, sha, msg){
+  const r = await ghFetch(c, {method:'PUT', body:JSON.stringify({message:msg, content:b64enc(JSON.stringify(data, null, 1)), ...(sha?{sha}:{})})});
+  if(!r.ok) throw {status:r.status, write:true};
+  return (await r.json()).content.sha;
+}
+const opLabel = op => op.t==='set' ? `Settings: ${op.key}` : op.t==='del' ? 'Remove entry' : `${op.rec?.kid||''} ${op.rec?.name||'update'}`.trim();
+function setStatus(s){ GH.status = s; renderStatus(); }
+async function flush(){
+  if(!GH.cfg){ setStatus('local'); return; }
+  if(GH.busy){ GH.again = true; return; }
+  GH.busy = true;
+  try{
+    for(let attempt=0; attempt<4; attempt++){
+      const ops = PENDING.slice();
+      setStatus(ops.length ? 'saving' : 'syncing');
+      const {data:remote, sha} = await ghRead(GH.cfg);
+      if(!ops.length){ DATA = remote; GH.sha = sha; break; }
+      const merged = ops.reduce((d,op)=>applyOp(d,op), structuredClone(remote));
+      try{
+        GH.sha = await ghWrite(GH.cfg, merged, sha, ops.length===1 ? opLabel(ops[0]) : `${ops.length} updates`);
+        PENDING = PENDING.slice(ops.length); LS.set('pending', PENDING);
+        DATA = PENDING.reduce((d,op)=>applyOp(d,op), merged);
+        if(!PENDING.length) break;
+      }catch(e){
+        if(e.status===409 || e.status===422){ await new Promise(r=>setTimeout(r, 300+Math.random()*700)); continue; }
+        throw e;
+      }
+    }
+    LS.set('cache', DATA);
+    setStatus(PENDING.length ? 'offline' : 'synced');
+  }catch(e){
+    GH.err = e && e.status ? {status:e.status, write:!!e.write} : null;
+    setStatus(e && e.status===401 ? 'auth' : e && e.status===403 ? (e.write ? 'nowrite' : 'auth') : e && e.status===404 ? 'norepo' : 'offline');
+  }finally{
+    GH.busy = false;
+    const typing = document.activeElement && ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName);
+    if(!typing && !PENDING.length){ loadFromData(); render(); }
+    if(GH.again){ GH.again = false; flush(); }
+  }
+}
+
+/* ---------- scoring ---------- */
+function cstate(kid, k, item){
+  const l = S.idx[kid]?.[k]?.chores[item];
+  if(l?.status === 'ok') return 'ok';
+  if(l?.status === 'pending') return 'pending';
+  const tk = todayKey();
+  if(k > tk) return 'future';
+  if(k < tk) return 'missed';
+  return afterCutoff() ? 'late' : 'todo';
+}
+function dayCalc(kid, k){
+  const d = S.idx[kid]?.[k] || {chores:{}, extras:[], rewards:[]};
+  const items = choresFor(kid, k);
+  const status = id => d.chores[id]?.status;
+  let pts = 0;
+  for(const it of items){ const l = d.chores[it.id]; if(l?.status==='ok') pts += (l.pts ?? it.pts); }
+  const bundle = items.filter(i=>i.group==='bundle'), laundry = items.filter(i=>i.group==='laundry');
+  const cnt = (arr, ...ss) => arr.filter(i=>ss.includes(status(i.id))).length;
+  const bundleDone = bundle.length>0 && cnt(bundle,'ok')===bundle.length;
+  const laundryDone = laundry.length>0 && cnt(laundry,'ok')===laundry.length;
+  if(bundleDone) pts += st().bundleBonus;
+  if(laundryDone) pts += st().laundryBonus;
+  for(const e of d.extras) if(e.status==='ok') pts += (e.pts||0);
+  return {d, items, pts, bundle, laundry, bundleDone, laundryDone,
+    bundleCount:cnt(bundle,'ok','pending'), laundryCount:cnt(laundry,'ok','pending'), daily:status('daily')};
+}
+function kidStats(kid){
+  const tk = todayKey(), first = S.firstKey;
+  const dayPts = {}, streakDays = {}, perfectWeeks = {};
+  let run = 0;
+  for(let k = first; k <= tk; k = addDays(k,1)){
+    const c = dayCalc(kid, k); let p = c.pts;
+    if(c.daily === 'ok'){ run++; if(st().streakEvery>0 && run % st().streakEvery === 0){ p += st().streakBonus; streakDays[k] = true; } }
+    else if(k < tk) run = 0;
+    if(isSat(k)){
+      const wk = weekKeys(k);
+      const allDaily = wk.every(x => S.idx[kid]?.[x]?.chores.daily?.status === 'ok');
+      if(allDaily && c.bundleDone && c.laundryDone){ p += st().perfectBonus; perfectWeeks[weekStart(k)] = true; }
+    }
+    dayPts[k] = p;
+  }
+  let earned = 0; for(const v of Object.values(dayPts)) earned += v;
+  let spent = 0;
+  for(const day of Object.values(S.idx[kid]||{})) for(const r of day.rewards) if(r.status==='ok'||r.status==='pending') spent += r.pts||0;
+  // streak shown = consecutive done days (approved or waiting) up to today
+  const done = k => ['ok','pending'].includes(S.idx[kid]?.[k]?.chores.daily?.status);
+  let streak = 0, k = tk;
+  if(!done(k)) k = addDays(k,-1);
+  while(done(k)){ streak++; k = addDays(k,-1); }
+  let weeksWon = 0;
+  for(let w = weekStart(first); w <= weekStart(tk); w = addDays(w,7)){
+    if(weekKeys(w).reduce((s,x)=>s+(dayPts[x]||0),0) >= st().weeklyTarget) weeksWon++;
+  }
+  return {dayPts, streakDays, perfectWeeks, earned, spent, balance:earned-spent, streak, weeksWon};
+}
+function recompute(){ S.stats = {}; for(const kid of KIDS) S.stats[kid] = kidStats(kid); }
+const weekTotal = (kid, ws) => weekKeys(ws).reduce((s,k)=>s+(S.stats[kid].dayPts[k]||0),0);
+function teamProgress(){
+  const since = st().team.since || S.firstKey; let t = 0;
+  for(const kid of KIDS) for(const [k,v] of Object.entries(S.stats[kid].dayPts)) if(k >= since) t += v;
+  return t;
+}
+const pendingLogs = () => Object.entries(DATA.logs||{}).filter(([,l])=>l.status==='pending').map(([id,l])=>({...l,id})).sort((a,b)=>a.at-b.at);
+
+/* score-aware wrapper: celebrate a week win or show the gain */
+function withScore(kid, k, fn){
+  const ws = weekStart(k);
+  const beforeW = weekTotal(kid, ws), beforeTeam = teamProgress();
+  fn();
+  const afterW = weekTotal(kid, ws), afterTeam = teamProgress(), tgt = st().weeklyTarget, tt = st().team.target;
+  render();
+  if(beforeTeam < tt && afterTeam >= tt) celebrateTeam();
+  else if(beforeW < tgt && afterW >= tgt) celebrate(kid, afterW);
+  else if(afterW > beforeW) toast(`+${afterW-beforeW} for ${kidName(kid)}`);
+}
+
+/* ---------- UI helpers ---------- */
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2000); }
+function celebrate(kid, total){
+  const L = document.getElementById('winLayer');
+  L.innerHTML = `<div class="win" style="${kv(kid)}"><div class="box"><h2>${esc(kidName(kid))} won the week!</h2>
+    <p class="num" style="font-family:var(--display);font-size:26px;font-weight:700;margin:12px 0 0">${total} / ${st().weeklyTarget} pts</p>
+    ${st().weeklyPrize?`<div class="prize">Weekly prize: ${esc(st().weeklyPrize)}</div>`:''}
+    <button class="btn primary block" data-act="closeWin">Awesome</button></div></div>`;
+  confetti([kidColor(kid), '#FACC15', '#EEF2F8']);
+}
+function celebrateTeam(){
+  const L = document.getElementById('winLayer');
+  L.innerHTML = `<div class="win" style="--kid:var(--gold)"><div class="box"><h2>Team goal reached!</h2>
+    <div class="prize">${esc(st().team.name)}</div><p class="muted">You did it together. A parent can start the next team goal in Parent → Team goal.</p>
+    <button class="btn primary block" data-act="closeWin">Yay!</button></div></div>`;
+  confetti(KIDS.map(kidColor).concat(['#FACC15']));
+}
+function confetti(cols){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = document.getElementById('confetti'); c.hidden=false;
+  const x = c.getContext('2d'); const W = c.width = innerWidth*devicePixelRatio, H = c.height = innerHeight*devicePixelRatio;
+  const P = Array.from({length:170},()=>({x:W/2,y:H*0.45,vx:(Math.random()-.5)*W*0.025,vy:-Math.random()*H*0.03-H*0.005,r:Math.random()*6+4,c:cols[Math.random()*cols.length|0],a:Math.random()*6}));
+  let f=0; (function step(){ x.clearRect(0,0,W,H); for(const p of P){ p.x+=p.vx; p.y+=p.vy; p.vy+=H*0.0009; p.a+=.15; x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillStyle=p.c; x.fillRect(-p.r,-p.r/2,p.r*2,p.r); x.restore(); } if(++f<160) requestAnimationFrame(step); else { x.clearRect(0,0,W,H); c.hidden=true; } })();
+}
+let armed = null;
+function armOrRun(btn, fn, label='Tap again'){
+  if(armed === btn){ armed=null; fn(); return; }
+  if(armed){ armed.innerHTML = armed.dataset.label; }
+  armed = btn; btn.dataset.label = btn.innerHTML; btn.textContent = label;
+  setTimeout(()=>{ if(armed===btn){ btn.innerHTML=btn.dataset.label; armed=null; } }, 2500);
+}
+async function hashPin(p){
+  const s = 'chorechart:' + p;
+  try{ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+  catch(e){ let h=5381; for(const ch of s) h=((h<<5)+h+ch.charCodeAt(0))|0; return 'd'+(h>>>0).toString(16); }
+}
+
+/* ---------- render: today ---------- */
+function choreBtn(kid, k, it, big){
+  const s = cstate(kid, k, it.id), l = S.idx[kid]?.[k]?.chores[it.id];
+  const sub = {ok:'Done!', pending:'Waiting for a parent to OK', todo: l?.status==='no' ? 'Not OK’d yet. Give it another go' : (it.group==='daily' ? `Due by ${fmt12(st().cutoff)}` : 'Tap when done'), late:`Too late. Due by ${fmt12(st().cutoff)}`, missed:'Missed', future:'Coming up'}[s];
+  const ico = s==='ok' ? IC.check : s==='pending' ? IC.clock : IC[it.icon] || IC.star;
+  return `<button class="chore ${big?'big':''} st-${s}" data-act="tapChore" data-kid="${kid}" data-k="${k}" data-item="${esc(it.id)}">
+    <span class="ci">${ico}</span><span class="cn">${esc(it.name)}<small>${sub}</small></span><span class="cp num">+${l?.pts ?? it.pts}</span></button>`;
+}
+function kidCard(kid, k){
+  const s = S.stats[kid], c = dayCalc(kid, k), ws = weekStart(k), wt = weekTotal(kid, ws), tgt = st().weeklyTarget;
+  const jk = jobOf(kid, k), job = st().jobs[jk], b = st().bundles[job.bundle];
+  const daily = c.items.find(i=>i.group==='daily');
+  let sat = '';
+  if(isSat(k)){
+    sat = `<div class="sec"><span>Saturday · ${esc(b.name)}</span><span class="tag ${c.bundleDone?'gold':''} num">${c.bundleCount}/${c.bundle.length}</span></div>
+      <div class="steps">${c.bundle.map(it=>choreBtn(kid,k,it)).join('')}</div>
+      <div class="bonusline ${c.bundleDone?'on':''}">${IC.sparkle}${c.bundleDone?`${esc(b.name)} finished: +${st().bundleBonus} bonus!`:`+${st().bundleBonus} bonus when every step is OK’d`}</div>
+      <div class="sec"><span>Saturday · ${esc(st().laundry.name)}</span><span class="tag ${c.laundryDone?'gold':''} num">${c.laundryCount}/${c.laundry.length}</span></div>
+      <div class="steps">${c.laundry.map(it=>choreBtn(kid,k,it)).join('')}</div>
+      <div class="bonusline ${c.laundryDone?'on':''}">${IC.sparkle}${c.laundryDone?`Laundry finished: +${st().laundryBonus} bonus!`:`+${st().laundryBonus} bonus when it’s all put away`}</div>`;
+  } else {
+    const satK = addDays(ws, 6);
+    sat = `<div class="satnote">${IC[job.bundle]}<span>Saturday${satK!==k?` (${fmtDay(satK).slice(4)})`:''}: <b style="color:var(--text)">${esc(b.name)}</b> + <b style="color:var(--text)">laundry</b></span></div>`;
+  }
+  const ex = c.d.extras;
+  const exRows = ex.map(e=>{
+    const tag = e.status==='ok' ? '<span class="tag ok">OK’d</span>' : e.status==='no' ? '<span class="tag no">Not OK’d</span>' : '<span class="tag wait">Waiting</span>';
+    const undo = e.status==='pending' && (k===todayKey() || isParent()) ? `<button class="btn small ghost danger" data-act="undoExtra" data-id="${e.id}">Undo</button>` : '';
+    return `<div class="xrow ${e.status}"><div class="grow">${esc(e.name)}</div>${tag}<span class="pts num">${e.pts!=null?'+'+e.pts:'?'}</span>${undo}</div>`;
+  }).join('');
+  const canAdd = k === todayKey() || isParent();
+  return `<section class="card kid" style="${kv(kid)}">
+    <div class="khead"><button class="dot" data-act="pickColor" data-kid="${kid}" aria-label="Change ${esc(kidName(kid))}’s colour">${esc(kidName(kid)[0]||'?')}</button>
+      <div class="kname">${esc(kidName(kid))}</div>
+      <div class="kchips"><span class="chip fire ${s.streak?'':'zero'} num" title="Daily streak">${IC.fire}${s.streak}</span><span class="chip star num" title="Points to spend">${IC.star}${s.balance}</span></div></div>
+    <div class="wk"><span>This week</span><span class="num"><b>${wt}</b> / ${tgt}${wt>=tgt?' · won!':''}</span></div>
+    <div class="bar ${wt>=tgt?'won':''}"><i style="width:${Math.min(100,wt/tgt*100)}%"></i></div>
+    <div class="sec" style="margin-top:4px"><span>Every day this week</span></div>
+    ${choreBtn(kid, k, daily, true)}
+    ${sat}
+    <div class="sec"><span>Extra jobs</span>${ex.length?`<span class="muted num" style="letter-spacing:0">${ex.length}</span>`:''}</div>
+    ${ex.length?`<div class="extras">${exRows}</div>`:''}
+    ${canAdd?`<button class="addx" data-act="openExtras" data-kid="${kid}">${IC.plus}Did an extra job</button>`:''}
+  </section>`;
+}
+function teamCard(){
+  const t = teamProgress(), tgt = st().team.target, pct = Math.min(100, t/tgt*100);
+  const since = st().team.since || S.firstKey;
+  const parts = KIDS.map(kid=>{ let v=0; for(const [k,p] of Object.entries(S.stats[kid].dayPts)) if(k>=since) v+=p; return [kid,v]; });
+  return `<section class="card team"><div class="ti">${IC.team}</div><div>
+    <div class="label" style="margin:0"><span>Team goal</span><span class="num">${Math.min(t,tgt)} / ${tgt}</span></div>
+    <h3>${esc(st().team.name)}</h3>
+    <div class="tbar">${parts.map(([kid,v])=>`<i style="width:${tgt?Math.min(100,v/tgt*100):0}%;background:${kidColor(kid)}"></i>`).join('')}</div>
+    <div class="muted" style="font-size:13px">${t>=tgt?'Goal reached! Time to celebrate together.':`Every point either of you earns counts. ${tgt-t} to go.`}</div></div></section>`;
+}
+function viewToday(){
+  const k = S.dayK, tk = todayKey(), d = parseKey(k);
+  const title = k===tk ? 'Today' : DOWL[d.getDay()];
+  return `<div class="daybar"><h2>${title}<small>${DOWL[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}${isSat(k)?' · Saturday jobs day':''}</small></h2>
+    <div class="nav"><button data-act="dayNav" data-v="-1" aria-label="Previous day">‹</button>${k!==tk?'<button class="todaybtn" data-act="goToday">Today</button>':''}<button data-act="dayNav" data-v="1" aria-label="Next day">›</button></div></div>
+    <div class="kids">${KIDS.map(kid=>kidCard(kid,k)).join('')}</div>${teamCard()}`;
+}
+
+/* ---------- render: week ---------- */
+function viewWeek(){
+  const ws = weekStart(S.weekK), we = addDays(ws,6), tk = todayKey(), tgt = st().weeklyTarget;
+  const cards = KIDS.map(kid=>{
+    const wt = weekTotal(kid, ws), jk = jobOf(kid, ws), job = st().jobs[jk], b = st().bundles[job.bundle];
+    const cells = weekKeys(ws).map(k=>{
+      const c = dayCalc(kid,k), s = cstate(kid,k,'daily');
+      const mk = s==='ok' ? `<span class="mk ok">${IC.check}</span>` : s==='pending' ? `<span class="mk pending">${IC.clock}</span>` : s==='missed' && k >= S.firstKey ? `<span class="mk missed">${IC.x}</span>` : `<span class="mk ${s==='missed'?'future':s}"></span>`;
+      const satLine = isSat(k) ? `<span class="sb ${c.bundleDone&&c.laundryDone?'full':''}">${c.bundleCount+c.laundryCount}/${c.bundle.length+c.laundry.length}</span>` : '';
+      const p = S.stats[kid].dayPts[k];
+      return `<button class="wd ${k===tk?'today':''}" data-act="openDay" data-k="${k}"><span class="dw">${DOW[parseKey(k).getDay()].slice(0,2)}</span><span class="dn">${parseKey(k).getDate()}</span>${mk}${satLine}<span class="p num">${p?p:'·'}</span></button>`;
+    }).join('');
+    const sat = addDays(ws,6), c = dayCalc(kid, sat);
+    const dailyOk = weekKeys(ws).filter(k=>S.idx[kid]?.[k]?.chores.daily?.status==='ok').length;
+    const perfect = S.stats[kid].perfectWeeks[ws];
+    return `<section class="card wkcard" style="${kv(kid)}">
+      <div class="khead" style="margin-bottom:8px"><span class="dot">${esc(kidName(kid)[0]||'?')}</span><div class="kname">${esc(kidName(kid))}</div>${wt>=tgt?`<span class="tag gold">${IC.trophy.replace('<svg','<svg style="width:14px;height:14px;vertical-align:-2px"')} Won</span>`:''}</div>
+      <div class="muted" style="font-size:14px;margin-bottom:8px">${esc(job.name)} every day · ${esc(b.name)} + laundry on Saturday</div>
+      <div class="wk"><span>Week points</span><span class="num"><b>${wt}</b> / ${tgt}</span></div>
+      <div class="bar ${wt>=tgt?'won':''}"><i style="width:${Math.min(100,wt/tgt*100)}%"></i></div>
+      <div class="wgrid">${cells}</div>
+      <div class="perfect">
+        <div class="pf ${dailyOk===7?'ok':''}"><span>Every day</span><b class="num">${dailyOk}/7</b></div>
+        <div class="pf ${c.bundleDone?'ok':''}"><span>${esc(b.name)}</span><b>${c.bundleDone?'✓':`${c.bundleCount}/${c.bundle.length}`}</b></div>
+        <div class="pf ${c.laundryDone?'ok':''}"><span>Laundry</span><b>${c.laundryDone?'✓':`${c.laundryCount}/${c.laundry.length}`}</b></div>
+      </div>
+      <div class="bonusline ${perfect?'on':''}" style="margin-top:10px">${IC.sparkle}${perfect?`Perfect week! +${st().perfectBonus} bonus`:`Perfect week bonus: +${st().perfectBonus} for all three`}</div>
+    </section>`;
+  }).join('');
+  const rotCard = (label, k) => `<div class="rc"><h4>${label}</h4>${KIDS.map(kid=>{ const job=st().jobs[jobOf(kid,k)]; return `<div class="rl" style="${kv(kid)}"><i></i><span><b>${esc(kidName(kid))}</b>: ${esc(job.name.replace(/^(Empty|Sweep) the /i,''))} + ${esc(st().bundles[job.bundle].name)}</span></div>`; }).join('')}</div>`;
+  const d1 = parseKey(ws), d2 = parseKey(we);
+  return `<div class="daybar"><h2>Week<small>${MON[d1.getMonth()]} ${d1.getDate()} – ${MON[d2.getMonth()]} ${d2.getDate()} · Sunday to Saturday</small></h2>
+    <div class="nav"><button data-act="weekNav" data-v="-7" aria-label="Previous week">‹</button>${ws!==weekStart(tk)?'<button class="todaybtn" data-act="weekNow">This week</button>':''}<button data-act="weekNav" data-v="7" aria-label="Next week">›</button></div></div>
+    ${cards}
+    <section class="card"><div class="label"><span>Job rotation</span><span>Swaps every Sunday</span></div>
+      <div class="rot">${rotCard(ws===weekStart(tk)?'This week':'This one', ws)}${rotCard('Next week', addDays(ws,7))}</div></section>`;
+}
+
+/* ---------- render: shop ---------- */
+function viewShop(){
+  const kid = S.shopKid, s = S.stats[kid];
+  const mine = [];
+  for(const day of Object.values(S.idx[kid]||{})) mine.push(...day.rewards);
+  mine.sort((a,b)=>b.at-a.at);
+  const cards = st().rewards.slice().sort((a,b)=>a.cost-b.cost).map(r=>{
+    const can = s.balance >= r.cost;
+    return `<div class="rw ${can?'can':''}"><div class="rn">${esc(r.name)}</div><div class="rcost num">${IC.star}${r.cost}</div>
+      <div class="mini"><i style="width:${Math.min(100,s.balance/r.cost*100)}%"></i></div>
+      ${can?`<button class="btn small good" data-act="askReward" data-r="${r.id}">Ask for it</button>`:`<span class="muted" style="font-size:13px">${r.cost-s.balance} more to go</span>`}</div>`;
+  }).join('');
+  const hist = mine.slice(0,12).map(r=>`<div class="xrow ${r.status}"><div class="grow">${esc(r.name)} <span class="muted" style="font-size:12px">· ${fmtDay(r.k)}</span></div>${r.status==='ok'?'<span class="tag ok">Got it</span>':r.status==='no'?'<span class="tag no">Not now</span>':'<span class="tag wait">Waiting</span>'}<span class="pts num">−${r.pts}</span>${r.status==='pending'?`<button class="btn small ghost danger" data-act="undoExtra" data-id="${r.id}">Cancel</button>`:''}</div>`).join('');
+  return `<div class="pills">${KIDS.map(k=>`<button style="${kv(k)}" class="${k===kid?'on':''}" data-act="shopKid" data-v="${k}">${esc(kidName(k))}</button>`).join('')}</div>
+    <section class="card" style="${kv(kid)};border-top:4px solid var(--kid)">
+      <div class="label"><span>Points to spend</span><span>${s.weeksWon} week${s.weeksWon===1?'':'s'} won</span></div>
+      <div class="bal num"><b>${s.balance}</b><span>pts</span></div>
+      <div class="muted" style="font-size:13px;margin-top:6px">${s.earned} earned all time${s.spent?` · ${s.spent} spent`:''}</div>
+      <div class="shop">${cards}</div>
+      ${hist?`<div class="sec">Rewards asked for</div><div class="extras">${hist}</div>`:''}
+      <div class="muted" style="font-size:13px;margin-top:14px">Hit ${st().weeklyTarget} points in a week to also win the weekly prize: <b style="color:var(--text)">${esc(st().weeklyPrize)}</b>.</div>
+    </section>`;
+}
+
+/* ---------- render: parent ---------- */
+function pinView(){
+  const p = S.pin, creating = !st().pin;
+  if(!p.stage) p.stage = creating ? 'create' : 'enter';
+  const title = p.stage==='create' ? 'Create a parent PIN' : p.stage==='confirm' ? 'Type it again' : 'Parent PIN';
+  const sub = p.stage==='create' ? 'Pick 4 digits the girls don’t know. You’ll use it to OK chores and change settings.' : p.stage==='confirm' ? 'Just to make sure.' : 'Enter your PIN to OK chores and change settings.';
+  return `<div class="pinwrap"><div style="color:var(--gold);display:flex;justify-content:center">${IC.lock.replace('<svg','<svg style="width:40px;height:40px"')}</div>
+    <h2>${title}</h2><p class="muted" style="margin:0">${sub}</p>
+    <div class="pdots" id="pdots">${[0,1,2,3].map(i=>`<i class="${i<p.buf.length?'on':''}"></i>`).join('')}</div>
+    <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-act="pinKey" data-v="${n}">${n}</button>`).join('')}<button data-act="pinKey" data-v="clr" style="font-size:16px">Clear</button><button data-act="pinKey" data-v="0">0</button><button data-act="pinKey" data-v="del" style="font-size:22px">⌫</button></div></div>`;
+}
+function approvalsCard(){
+  const list = pendingLogs();
+  const rows = list.map(l=>{
+    const what = l.kind==='reward' ? `Wants: ${esc(l.name)}` : esc(l.name);
+    const sub = `${l.kind==='chore'?(l.item==='daily'?'Daily job':l.item.startsWith('b:')?'Saturday job':'Laundry'):l.kind==='reward'?'Reward':l.kind==='custom'?'Their own extra job':'Extra job'} · ${fmtDay(l.k)} · ${fmtTime(l.at)}`;
+    const pts = l.kind==='reward' ? `<span class="apts" style="color:var(--gold)">−${l.pts}</span>` : l.pts==null ? `<input type="number" inputmode="numeric" min="0" step="5" placeholder="pts" data-ptsfor="${l.id}" aria-label="Points">` : `<span class="apts" style="color:var(--kid)">+${l.pts}</span>`;
+    return `<div class="ap" style="${kv(l.kid)}"><div><div class="who">${esc(kidName(l.kid))}</div><div class="what">${what}</div><div class="when">${sub}</div></div>
+      <div class="acts">${pts}<button class="btn small danger" data-act="reject" data-id="${l.id}" aria-label="Not OK">${IC.x.replace('<svg','<svg style="width:18px;height:18px"')}</button><button class="btn small good" data-act="approve" data-id="${l.id}" aria-label="OK">${IC.check.replace('<svg','<svg style="width:18px;height:18px"')}</button></div></div>`;
+  }).join('');
+  const bulk = list.filter(l=>l.pts!=null).length;
+  return `<section class="card"><div class="label"><span>Waiting for your OK</span>${bulk>1?`<button class="btn small good" data-act="approveAll">OK all ${bulk}</button>`:''}</div>
+    ${rows?`<div class="stack" style="gap:8px">${rows}</div>`:'<div class="empty">Nothing waiting. When the girls tap a job, it shows up here.</div>'}</section>`;
+}
+const num = (path, v, attrs='') => `<input type="number" inputmode="numeric" data-set="${path}" value="${v}" ${attrs}>`;
+function settingsView(){
+  const s = st(), tk = todayKey();
+  const kidRows = KIDS.map(kid=>`<div class="fr"><input type="text" data-set="kids.${kid}.name" value="${esc(s.kids[kid].name)}" style="flex:1"></div>
+    <div class="swatches">${PALETTE.map(c=>`<button class="sw ${s.kids[kid].color===c?'on':''}" style="--c:${c}" data-act="setColor" data-kid="${kid}" data-v="${c}" aria-label="${c}"></button>`).join('')}</div>`).join('<div style="height:6px"></div>');
+  const listRows = (key, valKey) => s[key].map((x,i)=>`<div class="lrow"><input type="text" data-set="${key}.${i}.name" value="${esc(x.name)}"><input type="number" inputmode="numeric" data-set="${key}.${i}.${valKey}" value="${x[valKey]}"><button class="btn small ghost danger" data-act="listDel" data-key="${key}" data-i="${i}">Remove</button></div>`).join('');
+  return `
+  <details class="set" open><summary>Extra jobs</summary><div class="body">
+    <p class="muted" style="margin:0;font-size:14px">The menu the girls pick from. They can also send in their own job and you set the points when you OK it.</p>
+    <div class="lrow muted" style="font-size:12px"><span>Job</span><span>Points</span><span></span></div>
+    ${listRows('extras','pts')}
+    <button class="btn" data-act="listAdd" data-key="extras">+ Add an extra job</button></div></details>
+  <details class="set"><summary>Reward shop</summary><div class="body">
+    <div class="lrow muted" style="font-size:12px"><span>Reward</span><span>Cost</span><span></span></div>
+    ${listRows('rewards','cost')}
+    <button class="btn" data-act="listAdd" data-key="rewards">+ Add a reward</button></div></details>
+  <details class="set"><summary>Points &amp; weekly goal</summary><div class="body">
+    <div class="fr"><label>Weekly target</label>${num('weeklyTarget', s.weeklyTarget)}</div>
+    <div class="fr" style="align-items:stretch"><label style="align-self:center">Weekly prize</label><input type="text" data-set="weeklyPrize" value="${esc(s.weeklyPrize)}" style="flex:1;min-width:200px"></div>
+    <div class="fr"><label>${esc(s.jobs.dish.name)} (per day)</label>${num('jobs.dish.pts', s.jobs.dish.pts)}</div>
+    <div class="fr"><label>${esc(s.jobs.sweep.name)} (per day)</label>${num('jobs.sweep.pts', s.jobs.sweep.pts)}</div>
+    <div class="fr"><label>${esc(s.bundles.bath.name)}: points per step</label>${num('bundles.bath.step', s.bundles.bath.step)}</div>
+    <div class="fr"><label>${esc(s.bundles.stoop.name)}: points per step</label>${num('bundles.stoop.step', s.bundles.stoop.step)}</div>
+    <div class="fr"><label>Saturday job finish bonus</label>${num('bundleBonus', s.bundleBonus)}</div>
+    <div class="fr"><label>Laundry: points per step</label>${num('laundry.step', s.laundry.step)}</div>
+    <div class="fr"><label>Laundry finish bonus</label>${num('laundryBonus', s.laundryBonus)}</div>
+    <div class="fr"><label>Perfect week bonus<span class="hint">Every daily job + Saturday job + laundry</span></label>${num('perfectBonus', s.perfectBonus)}</div>
+    <div class="fr"><label>Streak bonus<span class="hint">Paid every ${s.streakEvery} days in a row</span></label>${num('streakBonus', s.streakBonus)}</div>
+    <div class="fr"><label>Days in a row for a streak bonus</label>${num('streakEvery', s.streakEvery, 'min="2"')}</div>
+    <div class="fr"><label>Daily jobs due by<span class="hint">After this, the girls can’t tick today’s jobs</span></label><input type="time" data-set="cutoff" value="${s.cutoff}"></div></div></details>
+  <details class="set"><summary>Jobs &amp; rotation</summary><div class="body">
+    <div class="rot">${['This week','Next week'].map((lab,i)=>`<div class="rc"><h4>${lab}</h4>${KIDS.map(kid=>{ const job=s.jobs[jobOf(kid,addDays(tk,i*7))]; return `<div class="rl" style="${kv(kid)}"><i></i><span><b>${esc(kidName(kid))}</b>: ${esc(job.name)} + ${esc(s.bundles[job.bundle].name)}</span></div>`; }).join('')}</div>`).join('')}</div>
+    <button class="btn" data-act="swapRotation">Swap who’s on what</button>
+    <div class="subh">Daily job names</div>
+    <div class="fr"><input type="text" data-set="jobs.dish.name" value="${esc(s.jobs.dish.name)}" style="flex:1"></div>
+    <div class="fr"><input type="text" data-set="jobs.sweep.name" value="${esc(s.jobs.sweep.name)}" style="flex:1"></div>
+    <div class="subh">${esc(s.bundles.bath.name)} steps (one per line)</div>
+    <textarea data-set="bundles.bath.steps" data-lines>${esc(s.bundles.bath.steps.join('\n'))}</textarea>
+    <div class="subh">${esc(s.bundles.stoop.name)} steps (one per line)</div>
+    <textarea data-set="bundles.stoop.steps" data-lines>${esc(s.bundles.stoop.steps.join('\n'))}</textarea>
+    <div class="subh">Laundry steps (one per line)</div>
+    <textarea data-set="laundry.steps" data-lines style="min-height:100px">${esc(s.laundry.steps.join('\n'))}</textarea></div></details>
+  <details class="set"><summary>Team goal</summary><div class="body">
+    <div class="fr" style="align-items:stretch"><label style="align-self:center">Goal</label><input type="text" data-set="team.name" value="${esc(s.team.name)}" style="flex:1;min-width:200px"></div>
+    <div class="fr"><label>Combined points needed</label>${num('team.target', s.team.target)}</div>
+    <div class="fr"><span class="muted" style="font-size:14px">Counting since ${fmtDay(s.team.since || S.firstKey)} · ${teamProgress()} so far</span><button class="btn small" data-act="newTeam">Start a new team goal</button></div></div></details>
+  <details class="set"><summary>Girls’ names &amp; colours</summary><div class="body">${kidRows}</div></details>
+  <details class="set"><summary>Parent PIN</summary><div class="body"><p class="muted" style="margin:0;font-size:14px">Parent mode locks itself after 10 minutes.</p><button class="btn" data-act="changePin">Change PIN</button></div></details>
+  <details class="set" ${GH.cfg?'':'open'}><summary>GitHub sync</summary><div class="body">
+    <p class="muted" style="margin:0;font-size:14px">Saves everything to <b>data.json</b> in a private repo so the iPad and your phone share the same chart. Connect once per device. The token stays on that device.</p>
+    <div class="fr"><label for="gh-owner">GitHub username</label><input type="text" id="gh-owner" autocomplete="off" autocapitalize="off" value="${esc(GH.cfg?.owner||'dangarritymedia-ib')}"></div>
+    <div class="fr"><label for="gh-repo">Data repo</label><input type="text" id="gh-repo" autocomplete="off" autocapitalize="off" value="${esc(GH.cfg?.repo||'chore-chart-data')}"></div>
+    <div class="fr"><label for="gh-token">Access token</label><input type="password" id="gh-token" autocomplete="off" placeholder="${GH.cfg?'Saved. Paste a new one to replace':'github_pat_…'}"></div>
+    <div class="row"><button class="btn" data-act="ghSave">Connect</button>${GH.cfg?'<button class="btn ghost danger" data-act="ghForget">Disconnect this device</button>':''}</div></div></details>`;
+}
+function viewParent(){
+  if(!isParent()) return pinView();
+  return `<div class="daybar"><h2>Parent<small>Unlocked for 10 minutes</small></h2><button class="btn small" data-act="lock">${IC.lock.replace('<svg','<svg style="width:16px;height:16px;vertical-align:-3px"')} Lock</button></div>
+    <div class="stack">${approvalsCard()}${settingsView()}</div>`;
+}
+
+/* ---------- sheets ---------- */
+function renderSheet(){
+  const L = document.getElementById('sheetLayer'), sh = S.sheet;
+  if(!sh){ L.innerHTML=''; return; }
+  const kid = sh.kid;
+  let body = '';
+  if(sh.type === 'extras'){
+    body = `<h3>Extra job</h3><p class="muted" style="margin:4px 0 0">What did ${esc(kidName(kid))} do? A parent will OK it.</p>
+      <div class="xlist">${st().extras.map(x=>`<button class="xbtn" data-act="addExtra" data-x="${x.id}"><span>${esc(x.name)}</span><b class="num">+${x.pts}</b></button>`).join('')}</div>
+      <div class="sec">Something else</div>
+      <div class="row" style="flex-wrap:nowrap"><input type="text" id="customX" placeholder="e.g. Helped Grandma with her garden" style="flex:1"><button class="btn" data-act="addCustom">Send</button></div>
+      <button class="btn ghost block" style="margin-top:12px" data-act="closeSheet">Cancel</button>`;
+  } else if(sh.type === 'color'){
+    body = `<h3>${esc(kidName(kid))}’s colour</h3>
+      <div class="swatches" style="margin:16px 0;justify-content:center">${PALETTE.map(c=>`<button class="sw ${kidColor(kid)===c?'on':''}" style="--c:${c};width:52px;height:52px" data-act="setColor" data-kid="${kid}" data-v="${c}" aria-label="${c}"></button>`).join('')}</div>
+      <button class="btn ghost block" data-act="closeSheet">Done</button>`;
+  }
+  L.innerHTML = `<div class="sheetbg" data-act="bgClose"><div class="sheet" style="${kv(kid)}">${body}</div></div>`;
+}
+
+/* ---------- top-level render ---------- */
+const TABS = [['today','Today','home'],['week','Week','cal'],['shop','Shop','gift'],['parent','Parent','shield']];
+function renderStatus(){
+  const el = document.getElementById('syncStat'); if(!el) return;
+  const map = {local:'On this device',synced:'Synced',saving:'Saving…',syncing:'Syncing…',offline:'Offline, will sync',auth:'Sync error',norepo:'Sync error',nowrite:'Sync error',idle:''};
+  el.className = 'sync ' + GH.status; el.querySelector('span').textContent = map[GH.status]||'';
+  const b = document.getElementById('banner');
+  let msg = '';
+  if(GH.status==='auth') msg = `GitHub rejected the token (error ${GH.err?.status||''}). Paste it again in Parent → GitHub sync.`;
+  else if(GH.status==='nowrite') msg = 'The token can read the data repo but not save to it. Edit the token on GitHub and set Contents to “Read and write”.';
+  else if(GH.status==='norepo') msg = 'Can’t find the data repo. Check the username and repo name in Parent → GitHub sync.';
+  b.innerHTML = msg ? `<div class="banner">${msg}</div>` : '';
+}
+function render(){
+  if(S.parentUntil && !isParent()){ S.parentUntil = 0; }
+  recompute();
+  const m = document.getElementById('main');
+  m.innerHTML = S.view==='week' ? viewWeek() : S.view==='shop' ? viewShop() : S.view==='parent' ? viewParent() : viewToday();
+  const n = pendingLogs().length;
+  document.getElementById('tabs').innerHTML = TABS.map(([v,l,i])=>`<button class="${S.view===v?'on':''}" data-act="view" data-v="${v}">${IC[i]}${l}${v==='parent'&&n?`<span class="badge num">${n}</span>`:''}</button>`).join('');
+  const lc = document.getElementById('lockChip');
+  lc.className = 'lockchip' + (isParent()?' open':'');
+  lc.innerHTML = isParent() ? `${IC.unlock}Parent` : `${IC.lock}${n?`<span class="num">${n} to OK</span>`:'Parent'}`;
+  renderSheet(); renderStatus();
+}
+
+/* ---------- actions ---------- */
+function tapChore(kid, k, item){
+  const id = `${k}|${kid}|${item}`, it = choresFor(kid,k).find(i=>i.id===item);
+  if(!it) return;
+  const l = DATA.logs?.[id];
+  if(isParent()){
+    bumpParent();
+    if(l?.status === 'ok'){ delLog(id); render(); toast('Unticked'); return; }
+    withScore(kid, k, ()=>putLog(id, {kind:'chore', kid, k, item, name:it.name, pts:it.pts, status:'ok', at:Date.now(), by:'parent'}));
+    return;
+  }
+  const s = cstate(kid, k, item);
+  if(s === 'pending'){ delLog(id); render(); toast('Undone'); return; }
+  if(s === 'ok'){ toast('Already OK’d ✓'); return; }
+  if(s === 'late'){ toast(`Too late. Jobs are due by ${fmt12(st().cutoff)}`); return; }
+  if(s === 'missed' || s === 'future'){ toast('Only today’s jobs can be ticked'); return; }
+  putLog(id, {kind:'chore', kid, k, item, name:it.name, pts:it.pts, status:'pending', at:Date.now()});
+  render();
+  const c = dayCalc(kid, k);
+  if(it.group==='bundle' && c.bundleCount===c.bundle.length) toast(`${st().bundles[st().jobs[jobOf(kid,k)].bundle].name} all done! Bonus once it’s OK’d`);
+  else if(it.group==='laundry' && c.laundryCount===c.laundry.length) toast('Laundry all done! Bonus once it’s OK’d');
+  else toast('Nice! Sent for a parent to OK');
+}
+function approve(id){
+  const l = DATA.logs?.[id]; if(!l) return;
+  const patch = {status:'ok', okAt:Date.now()};
+  if(l.pts == null){
+    const inp = document.querySelector(`[data-ptsfor="${id}"]`); const v = Number(inp?.value);
+    if(!inp?.value || !(v >= 0)){ toast('Set the points first'); inp?.focus(); return; }
+    patch.pts = Math.round(v);
+  }
+  bumpParent();
+  if(l.kind === 'reward'){ patchLog(id, patch); render(); toast(`${kidName(l.kid)} gets: ${l.name}`); return; }
+  withScore(l.kid, l.k, ()=>patchLog(id, patch));
+}
+function setPath(obj, path, val){
+  const parts = path.split('.'); let o = obj;
+  for(let i=0;i<parts.length-1;i++) o = o[parts[i]];
+  o[parts[parts.length-1]] = val;
+}
+async function pinKey(v){
+  const p = S.pin;
+  if(v==='del') p.buf = p.buf.slice(0,-1);
+  else if(v==='clr') p.buf = '';
+  else if(p.buf.length < 4) p.buf += v;
+  render();
+  if(p.buf.length < 4) return;
+  const entered = p.buf;
+  if(p.stage === 'create'){ p.first = entered; p.buf=''; p.stage='confirm'; render(); return; }
+  if(p.stage === 'confirm'){
+    if(entered !== p.first){ p.buf=''; p.stage='create'; p.first=''; toast('Didn’t match. Try again'); render(); return; }
+    setSetting('pin', await hashPin(entered)); S.parentUntil = Date.now()+10*60*1000; S.pin={buf:'',stage:null,first:''}; render(); toast('PIN saved'); return;
+  }
+  if(await hashPin(entered) === st().pin){ S.parentUntil = Date.now()+10*60*1000; S.pin={buf:'',stage:null,first:''}; render(); }
+  else { p.buf=''; render(); const d=document.getElementById('pdots'); d?.classList.add('shake'); toast('Wrong PIN'); }
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act, D = b.dataset;
+  if(a === 'bgClose'){ if(e.target === b){ S.sheet=null; renderSheet(); } return; }
+  switch(a){
+    case 'view': S.view = D.v; if(D.v==='today') S.dayK = todayKey(); if(D.v==='week') S.weekK = todayKey(); S.pin.buf=''; render(); scrollTo(0,0); break;
+    case 'lockchip': if(isParent()){ S.parentUntil=0; render(); toast('Locked'); } else { S.view='parent'; render(); } break;
+    case 'lock': S.parentUntil = 0; S.view='today'; S.dayK=todayKey(); render(); toast('Locked'); break;
+    case 'dayNav': S.dayK = addDays(S.dayK, Number(D.v)); render(); break;
+    case 'goToday': S.dayK = todayKey(); render(); break;
+    case 'weekNav': S.weekK = addDays(S.weekK, Number(D.v)); render(); break;
+    case 'weekNow': S.weekK = todayKey(); render(); break;
+    case 'openDay': S.dayK = D.k; S.view='today'; render(); scrollTo(0,0); break;
+    case 'tapChore': tapChore(D.kid, D.k, D.item); break;
+    case 'openExtras': S.sheet = {type:'extras', kid:D.kid}; renderSheet(); break;
+    case 'pickColor': S.sheet = {type:'color', kid:D.kid}; renderSheet(); break;
+    case 'closeSheet': S.sheet = null; renderSheet(); break;
+    case 'closeWin': document.getElementById('winLayer').innerHTML=''; break;
+    case 'setColor': { const kids = structuredClone(st().kids); kids[D.kid].color = D.v; setSetting('kids', kids); render(); break; }
+    case 'addExtra': {
+      const x = st().extras.find(z=>z.id===D.x), kid = S.sheet.kid, k = S.dayK; if(!x) break;
+      const parent = isParent(); bumpParent();
+      S.sheet = null;
+      const rec = {kind:'extra', kid, k, item:x.id, name:x.name, pts:x.pts, status:parent?'ok':'pending', at:Date.now()};
+      if(parent) withScore(kid, k, ()=>putLog(rid(), rec)); else { putLog(rid(), rec); render(); toast('Sent for a parent to OK'); }
+      break;
+    }
+    case 'addCustom': {
+      const v = (document.getElementById('customX')?.value||'').trim(); if(!v){ toast('Type what you did'); break; }
+      const kid = S.sheet.kid; S.sheet = null;
+      putLog(rid(), {kind:'custom', kid, k:S.dayK, name:v, pts:null, status:'pending', at:Date.now()}); render(); toast('Sent! A parent will set the points');
+      break;
+    }
+    case 'undoExtra': armOrRun(b, ()=>{ delLog(D.id); render(); toast('Removed'); }); break;
+    case 'shopKid': S.shopKid = D.v; render(); break;
+    case 'askReward': armOrRun(b, ()=>{
+      const r = st().rewards.find(z=>z.id===D.r), kid = S.shopKid; if(!r) return;
+      if(S.stats[kid].balance < r.cost){ toast('Not enough points yet'); return; }
+      putLog(rid(), {kind:'reward', kid, k:todayKey(), item:r.id, name:r.name, pts:r.cost, status:'pending', at:Date.now()});
+      render(); toast('Asked! A parent will OK it');
+    }, 'Tap to confirm'); break;
+    case 'pinKey': pinKey(D.v); break;
+    case 'approve': approve(D.id); break;
+    case 'reject': armOrRun(b, ()=>{ bumpParent(); patchLog(D.id, {status:'no', okAt:Date.now()}); render(); toast('Marked not OK'); }, 'Sure?'); break;
+    case 'approveAll': {
+      bumpParent();
+      const list = pendingLogs().filter(l=>l.pts!=null);
+      const before = Object.fromEntries(KIDS.map(k=>[k, weekTotal(k, weekStart(todayKey()))]));
+      const beforeTeam = teamProgress();
+      for(const l of list) applyOp(DATA, {t:'patch', id:l.id, patch:{status:'ok', okAt:Date.now()}}), PENDING.push({t:'patch', id:l.id, patch:{status:'ok', okAt:Date.now()}});
+      LS.set('cache', DATA); LS.set('pending', PENDING); loadFromData(); flush(); render();
+      const won = KIDS.find(k=>before[k] < st().weeklyTarget && weekTotal(k, weekStart(todayKey())) >= st().weeklyTarget);
+      if(beforeTeam < st().team.target && teamProgress() >= st().team.target) celebrateTeam();
+      else if(won) celebrate(won, weekTotal(won, weekStart(todayKey())));
+      else toast(`OK’d ${list.length}`);
+      break;
+    }
+    case 'listAdd': { bumpParent(); const arr = structuredClone(st()[D.key]); arr.push(D.key==='extras' ? {id:rid(), name:'New extra job', pts:20} : {id:rid(), name:'New reward', cost:100}); setSetting(D.key, arr); render(); break; }
+    case 'listDel': armOrRun(b, ()=>{ bumpParent(); const arr = structuredClone(st()[D.key]); arr.splice(Number(D.i),1); setSetting(D.key, arr); render(); }); break;
+    case 'swapRotation': armOrRun(b, ()=>{ bumpParent(); setSetting('anchor', addDays(weekStart(st().anchor), 7)); render(); toast('Swapped'); }, 'Tap again to swap'); break;
+    case 'newTeam': armOrRun(b, ()=>{ bumpParent(); setSetting('team', {...st().team, since:todayKey()}); render(); toast('New team goal started'); }, 'Tap again to restart'); break;
+    case 'changePin': S.parentUntil = 0; S.pin = {buf:'', stage:'create', first:''}; render(); break;
+    case 'ghSave': {
+      const val = id => document.getElementById(id)?.value;
+      const owner=(val('gh-owner')||'').trim(), repo=(val('gh-repo')||'').trim(); let token=(val('gh-token')||'').trim().replace(/\s/g,'');
+      if(!token && GH.cfg) token = GH.cfg.token;
+      if(!owner||!repo||!token){ toast('Fill in username, repo and token'); break; }
+      GH.cfg = {owner, repo, token}; LS.set('gh', GH.cfg); toast('Connecting…'); flush(); break;
+    }
+    case 'ghForget': armOrRun(b, ()=>{ GH.cfg=null; LS.set('gh', null); setStatus('local'); render(); }); break;
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-set]'); if(!el || !isParent()) return;
+  bumpParent();
+  const path = el.dataset.set, top = path.split('.')[0];
+  let v = el.value;
+  if(el.type === 'number'){ v = Math.max(0, Math.round(Number(v))); if(!Number.isFinite(v)) return; }
+  if('lines' in el.dataset){ v = v.split('\n').map(x=>x.trim()).filter(Boolean); if(!v.length) return; }
+  if(typeof v === 'string' && el.type !== 'time'){ v = v.trim(); if(!v) return; }
+  const s = structuredClone(st());
+  setPath(s, path, v);
+  if(top === 'streakEvery' && s.streakEvery < 2) s.streakEvery = 2;
+  setSetting(top, s[top]); render(); toast('Saved');
+});
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter' && e.target.id==='customX'){ document.querySelector('[data-act="addCustom"]')?.click(); }
+  if(e.key==='Escape' && S.sheet){ S.sheet=null; renderSheet(); }
+});
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ if(S.view==='today' && !S.sheet) S.dayK = todayKey(); flush(); render(); } });
+addEventListener('online', flush);
+setInterval(()=>{ const typing = document.activeElement && ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName); if(!typing && !S.sheet) render(); }, 60000);
+setInterval(()=>{ if(GH.cfg && !GH.busy && document.visibilityState==='visible') flush(); }, 90000);
+
+loadFromData(); render(); flush();
+})();
+</script>
+</body>
+</html>
